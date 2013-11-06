@@ -2,15 +2,16 @@
  "file":"/Users/will/clojurescript/boxcloj/out/boxcloj/core.js",
  "sources":
  ["/Users/will/clojurescript/boxcloj/src/boxcloj/core.cljs"],
- "lineCount":82,
+ "lineCount":99,
  "mappings":
- "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",
+ "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",
  "names":
  ["log", "message", "console", "getAnimFrameType", "or__2961__auto__",
   "window", "setAnimFrame", "canvas", "document", "ctx", "SCALE",
-  "NUM-CIRCLES", "draw", "coords", "vec__4688", "nth", "x", "y",
-  "Math", "init", "dynamics", "Box2D", "collision", "gravity-vec",
-  "shapes", "b2body-def", "b2body", "b2fixture-def", "b2fixture",
-  "b2world", "b2circle", "fix-def", "body-def", "position", "world",
-  "n", "rand-int", "update", "node", "get-coords", "requestAnimFrame",
-  "update"]}
+  "NUM-CIRCLES", "scale", "canvas", "dim", "height", "width", "=",
+  "centered-rand-int", "n", "rand-int", "draw", "args", "vec__4775",
+  "nth", "x", "y", "r", "Math", "init", "dynamics", "Box2D",
+  "collision", "vec", "shapes", "b2body-def", "b2body",
+  "b2fixture-def", "b2fixture", "b2world", "b2circle", "fix-def",
+  "body-def", "position", "world", "rand", "update", "node",
+  "get-draw-args", "requestAnimFrame", "update"]}
