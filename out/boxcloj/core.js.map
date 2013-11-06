@@ -1,0 +1,14 @@
+{"version":3,
+ "file":"/Users/will/clojurescript/boxcloj/out/boxcloj/core.js",
+ "sources":
+ ["/Users/will/clojurescript/boxcloj/src/boxcloj/core.cljs"],
+ "lineCount":68,
+ "mappings":
+ ";;AAECA,iCAAWC,gBACTC,YAAAD;;AAKFE,iEACEC,oEAAAA,jDAAKC;CAALD;;KAAAA,8EAAAA,vDACKC;CADLD;;KAAAA,oEAAAA,7CAEKC;CAFLD;;KAAAA,kEAAAA,3CAGKC;CAHLD;;QAIKC;;;;;;AAEPC,4DAEGD,0BACAF;;AAEHG;AAGAC,sBAAYC;AACZC,mBAASF;AAETG;AAEAC,mCAAYC,EAAEC,GACZb,0CAAKY,qCAAAC;AACLJ;AACAA,qBAAAG,EAAAC,aAAyBC;AACnBL;AACNA;AACMA;AACAA;OACNA;;AAEFM,yCACQC,WAAcC,mBACdC,YAAcD,oBACdE,cAA2BF,6BAC3BG,SAAcF,qBACdG,aAAcL,uBACdM,SAAcN,oBACdO,gBAAcP,0BACdQ,YAAcR,uBACdS,UAAcT,qBACdU,WAAcN,yBACdO,eAAcJ,qBACdK,gBAAcP,kBACdQ,WAAcD,kBAElBE,0BAAWL,aAAaN;AAClBS,gBAAkBN;AAClBK,qBAAkBD;AAClBG;AACAA;6DACNF,tDAAgBG,8BAAAF;;AAGpBG,yCACED;AACArB;IACOuB,YAAKF;oBACVE;qBACMA;KACIpB,UAAUoB,yDAAqBtB,5BAAGH,qDAClCM,UAAUmB,0DAAqBtB,7BAAGH,kDACtCI,4BAAAC,OAAAC;;;;;cACGmB;;;;;;;AACXF;OACAG,iBAAAC;;AAEFnB;AACAkB,iBAAAF",
+ "names":
+ ["log", "message", "console", "getAnimFrameType", "or__2961__auto__",
+  "window", "setAnimFrame", "canvas", "document", "ctx", "SCALE",
+  "draw", "x", "y", "Math", "init", "dynamics", "Box2D", "collision",
+  "gravity-vec", "shapes", "b2body-def", "b2body", "b2fixture-def",
+  "b2fixture", "b2world", "b2circle", "fix-def", "body-def",
+  "position", "world", "update", "node", "requestAnimFrame", "update"]}
