@@ -2,16 +2,19 @@
  "file":"/Users/will/clojurescript/boxcloj/out/boxcloj/core.js",
  "sources":
  ["/Users/will/clojurescript/boxcloj/src/boxcloj/core.cljs"],
- "lineCount":99,
+ "lineCount":127,
  "mappings":
- "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",
+ "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",
  "names":
- ["log", "message", "console", "getAnimFrameType", "or__2961__auto__",
+ ["log", "message", "console", "rand-color", "join", "take",
+  "repeatedly", "rand-int", "getAnimFrameType", "or__2961__auto__",
   "window", "setAnimFrame", "canvas", "document", "ctx", "SCALE",
-  "NUM-CIRCLES", "scale", "canvas", "dim", "height", "width", "=",
-  "centered-rand-int", "n", "rand-int", "draw", "args", "vec__4775",
-  "nth", "x", "y", "r", "Math", "init", "dynamics", "Box2D",
-  "collision", "vec", "shapes", "b2body-def", "b2body",
-  "b2fixture-def", "b2fixture", "b2world", "b2circle", "fix-def",
-  "body-def", "position", "world", "rand", "update", "node",
-  "get-draw-args", "requestAnimFrame", "update"]}
+  "NUM-CIRCLES", "MAX-SIZE", "MAX-INIT-VEL", "scale", "canvas", "dim",
+  "height", "width", "=", "centered-rand-int", "n", "draw!", "args",
+  "vec__4723", "nth", "x", "y", "r", "Math", "init", "dynamics",
+  "Box2D", "collision", "vec", "shapes", "b2body-def", "b2body",
+  "b2fixture-def", "b2fixture", "b2world", "b2circle",
+  "b2contact-listner", "fix-def", "body-def", "position", "world",
+  "contact-listener", "listener", "c", "rand", "update", "node",
+  "get-draw-args", "requestAnimFrame", "update", "nodes", "world",
+  "draw"]}

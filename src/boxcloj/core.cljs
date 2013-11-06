@@ -1,10 +1,11 @@
-(ns boxcloj.core)
+(ns boxcloj.core
+  (:require [clojure.string :as str]))
 
 (defn log [message]
   (.log js/console message))
 
-;(defn rand-color []
-;  (str "rgb(" (string/join "," (take 3 (repeatedly #(rand-int 255))))))
+(defn rand-color []
+  (str "rgb(" (str/join "," (take 3 (repeatedly #(rand-int 255))))))
 
 (defn getAnimFrameType []
   (or  (.-requestAnimationFrame js/window)
@@ -25,7 +26,9 @@
 (def ctx (.getContext canvas "2d"))
 
 (def SCALE 30)
-(def NUM-CIRCLES 50)
+(def NUM-CIRCLES 40)
+(def MAX-SIZE 1)
+(def MAX-INIT-VEL 5)
 
 (defn scale [canvas dim]
   (defn height []
@@ -38,7 +41,7 @@
 (defn centered-rand-int [n]
   (- (rand-int n) (/ n 2)))
 
-(defn draw [args]
+(defn draw! [args]
   (let [[x y r] args]
     (.beginPath ctx)
     (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
@@ -59,22 +62,32 @@
         b2fixture     (.-b2Fixture dynamics)
         b2world       (.-b2World dynamics)
         b2circle      (.-b2CircleShape shapes)
+        b2contact-listner (.-b2ContactListener dynamics)
         fix-def       (new b2fixture-def)
         body-def      (new b2body-def)
         position      (.-position body-def)]
     
     (def world (new b2world (new vec 0 0) true))
+
+
+    (let [contact-listener (.-b2ContactListener dynamics)
+          listener (new contact-listener)]
+      (set! (.-BeginContact listener) (fn [c] (log "yowch!") (log c)))
+      (.SetContactListener world listener))
+    
     (set! (.-type body-def) (.-b2_dynamicBody b2body))
     (loop [n 0]
       (if (< n NUM-CIRCLES)
         (do
-          (set! (.-shape fix-def) (new b2circle (+ 0.3 (rand))))
-          (set! (.-x position) (rand-int 30))
-          (set! (.-y position) (rand-int 30))
+          (set! (.-shape fix-def) (new b2circle (+ (* MAX-SIZE (rand)) 0.2)))
+          (set! (.-x position) (rand-int SCALE))
+          (set! (.-y position) (rand-int SCALE))
           (set! (.-linearVelocity body-def)
-                (new vec (centered-rand-int 4) (centered-rand-int 4)))
+                (new vec (centered-rand-int MAX-INIT-VEL)
+                         (centered-rand-int MAX-INIT-VEL)))
           (.CreateFixture (.CreateBody world body-def) fix-def)
           (recur (inc n)))))))
+
 
 (defn update []
   (.Step world (/ 1 60) 10, 10)
@@ -83,10 +96,11 @@
     (if node
       (do
         (if (.GetFixtureList node)
-          (draw (get-draw-args node)))
+          (draw! (get-draw-args node)))
         (recur (.GetNext node)))))
   (.ClearForces world)
   (js/requestAnimFrame update))
+
 
 (defn get-draw-args [node]
   (let [x (* (.-x (.GetPosition node)) (scale canvas :width))
@@ -100,3 +114,12 @@
 
 (init)
 (js/requestAnimFrame update)
+
+
+(defn nodes [world]
+  (loop [node (.GetBodyList world)]
+    (if node
+      (do
+        (if (.GetFixtureList node)
+          (draw (get-draw-args node)))
+        (recur (.GetNext node))))))
