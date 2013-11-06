@@ -25,16 +25,17 @@
 (def ctx (.getContext canvas "2d"))
 
 (def SCALE 30)
+(def NUM-CIRCLES 5)
 
-(defn draw [x y]
-  (log (str x "  " y))
-  (.beginPath ctx)
-  (.arc ctx x y 100 0 (* 2 (.-PI js/Math)) false)
-  (set! (. ctx -fillStyle) "black")
-  (.fill ctx)
-  (set! (. ctx -lineWidth) 1)
-  (set! (. ctx -strokeStyle) "#335588")
-  (.stroke ctx))
+(defn draw [coords]
+  (let [[x y] coords]
+    (.beginPath ctx)
+    (.arc ctx x y 100 0 (* 2 (.-PI js/Math)) false)
+    (set! (. ctx -fillStyle) "black")
+    (.fill ctx)
+    (set! (. ctx -lineWidth) 1)
+    (set! (. ctx -strokeStyle) "#335588")
+    (.stroke ctx)))
 
 (defn init []
   (let [dynamics      (.-Dynamics js/Box2D)
@@ -51,26 +52,33 @@
         body-def      (new b2body-def)
         position      (.-position body-def)]
     
-    (def world (new b2world (new gravity-vec 0.4 0.2) true))
+    (def world (new b2world (new gravity-vec 0.1 0.3) true))
     (set! (.-type body-def) (.-b2_dynamicBody b2body))
-    (set! (.-shape fix-def) (new b2circle 1))
-    (set! (.-x position) 15)
-    (set! (.-y position) 15)
-    (.CreateFixture (.CreateBody world body-def) fix-def)))
-
+    (loop [n 0]
+      (if (< n NUM-CIRCLES)
+        (do
+          (set! (.-shape fix-def) (new b2circle (rand-int 4)))
+          (set! (.-x position) (rand-int 30))
+          (set! (.-y position) (rand-int 30))
+          (.CreateFixture (.CreateBody world body-def) fix-def)
+          (recur (inc n)))))))
 
 (defn update []
   (.Step world (/ 1 60) 10, 10)
   (.clearRect ctx 0 0 1000 1000)
   (loop [node (.GetBodyList world)]
     (if node
-      (if (.GetFixtureList node)
-        (let [x (* (.-x (.GetPosition node)) (/ (.-width canvas) SCALE))
-              y (* (.-y (.GetPosition node)) (/ (.-height canvas) SCALE))]
-          (draw x y)))
-      (recur (.GetNext node))))
+      (do
+        (if (.GetFixtureList node)
+          (draw (get-coords node)))
+        (recur (.GetNext node)))))
   (.ClearForces world)
   (js/requestAnimFrame update))
+
+(defn get-coords [node]
+  (let [x (* (.-x (.GetPosition node)) (/ (.-width canvas) SCALE))
+        y (* (.-y (.GetPosition node)) (/ (.-height canvas) SCALE))]
+    [x y]))
 
 (init)
 (js/requestAnimFrame update)
