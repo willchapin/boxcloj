@@ -27,7 +27,7 @@
 
 (def SCALE 30)
 (def NUM-CIRCLES 40)
-(def MAX-SIZE 1)
+(def MAX-SIZE 2)
 (def MAX-INIT-VEL 5)
 
 (defn scale [canvas dim]
@@ -41,15 +41,18 @@
 (defn centered-rand-int [n]
   (- (rand-int n) (/ n 2)))
 
-(defn draw! [args]
-  (let [[x y r] args]
-    (.beginPath ctx)
-    (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
+(defn draw-all! [args]
+  (loop [[x y r] (first args)
+         cdr (rest args)]
     (set! (. ctx -fillStyle) "black")
-    (.fill ctx)
     (set! (. ctx -lineWidth) 1)
     (set! (. ctx -strokeStyle) "#335588")
-    (.stroke ctx)))
+    (.beginPath ctx)
+    (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
+    (.fill ctx)
+    (.stroke ctx)
+    (if-not (empty? cdr) (recur (first cdr) (rest cdr)))))
+
 
 (defn init []
   (let [dynamics      (.-Dynamics js/Box2D)
@@ -69,10 +72,9 @@
     
     (def world (new b2world (new vec 0 0) true))
 
-
     (let [contact-listener (.-b2ContactListener dynamics)
           listener (new contact-listener)]
-      (set! (.-BeginContact listener) (fn [c] (log "yowch!") (log c)))
+      (set! (.-BeginContact listener) (fn [c] ))
       (.SetContactListener world listener))
     
     (set! (.-type body-def) (.-b2_dynamicBody b2body))
@@ -92,15 +94,9 @@
 (defn update []
   (.Step world (/ 1 60) 10, 10)
   (.clearRect ctx 0 0 1000 1000)
-  (loop [node (.GetBodyList world)]
-    (if node
-      (do
-        (if (.GetFixtureList node)
-          (draw! (get-draw-args node)))
-        (recur (.GetNext node)))))
+  (draw-all! (map get-draw-args (get-nodes world)))
   (.ClearForces world)
   (js/requestAnimFrame update))
-
 
 (defn get-draw-args [node]
   (let [x (* (.-x (.GetPosition node)) (scale canvas :width))
@@ -116,10 +112,11 @@
 (js/requestAnimFrame update)
 
 
-(defn nodes [world]
-  (loop [node (.GetBodyList world)]
-    (if node
-      (do
-        (if (.GetFixtureList node)
-          (draw (get-draw-args node)))
-        (recur (.GetNext node))))))
+(defn get-nodes [world]
+  (loop [node (.GetBodyList world)
+         nodes ()]
+    (if-not node
+      nodes
+      (if (.GetFixtureList node)
+        (recur (.GetNext node) (cons node nodes))
+        (recur (.GetNext node) nodes)))))

@@ -2,19 +2,20 @@
  "file":"/Users/will/clojurescript/boxcloj/out/boxcloj/core.js",
  "sources":
  ["/Users/will/clojurescript/boxcloj/src/boxcloj/core.cljs"],
- "lineCount":127,
+ "lineCount":134,
  "mappings":
- "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",
+ "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",
  "names":
  ["log", "message", "console", "rand-color", "join", "take",
   "repeatedly", "rand-int", "getAnimFrameType", "or__2961__auto__",
   "window", "setAnimFrame", "canvas", "document", "ctx", "SCALE",
   "NUM-CIRCLES", "MAX-SIZE", "MAX-INIT-VEL", "scale", "canvas", "dim",
-  "height", "width", "=", "centered-rand-int", "n", "draw!", "args",
-  "vec__4723", "nth", "x", "y", "r", "Math", "init", "dynamics",
-  "Box2D", "collision", "vec", "shapes", "b2body-def", "b2body",
+  "height", "width", "=", "centered-rand-int", "n", "draw-all!",
+  "args", "G__4825", "vec__4826", "nth", "cdr", "vec__4827", "x", "y",
+  "r", "first", "rest", "Math", "empty?", "init", "dynamics", "Box2D",
+  "collision", "vec", "shapes", "b2body-def", "b2body",
   "b2fixture-def", "b2fixture", "b2world", "b2circle",
   "b2contact-listner", "fix-def", "body-def", "position", "world",
-  "contact-listener", "listener", "c", "rand", "update", "node",
-  "get-draw-args", "requestAnimFrame", "update", "nodes", "world",
-  "draw"]}
+  "contact-listener", "listener", "c", "rand", "update", "map",
+  "get-draw-args", "get-nodes", "requestAnimFrame", "update", "node",
+  "world", "nodes", "not", "cons"]}
