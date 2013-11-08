@@ -1,5 +1,6 @@
 (ns boxcloj.core
-  (:require [clojure.string :as str])
+  (:require [clojure.string :as str]
+            [boxcloj.maths :refer [sqrt pow square]])
   (:require-macros [boxcloj.macros :refer [add]]))
 
 (defn log [message]
@@ -27,9 +28,9 @@
 (def ctx (.getContext canvas "2d"))
 
 (def SCALE 30)
-(def NUM-CIRCLES 40)
-(def MAX-SIZE 1)
-(def MAX-INIT-VEL 10)
+(def NUM-CIRCLES 5)
+(def MAX-SIZE 4)
+(def MAX-INIT-VEL 3)
 
 (defn scale [canvas dim]
   (defn height []
@@ -53,6 +54,7 @@
     (.fill ctx)
     (.stroke ctx)
     (if-not (empty? cdr) (recur (first cdr) (rest cdr)))))
+
 
 (defn init []
   (let [dynamics      (.-Dynamics js/Box2D)
@@ -130,9 +132,6 @@
               (* (scale canvas :width)))]
     [x y r]))
 
-(init)
-(js/requestAnimFrame update)
-
 (defn get-nodes [world]
   (loop [node (.GetBodyList world)
          nodes ()]
@@ -141,3 +140,25 @@
       (if (.GetFixtureList node)
         (recur (.GetNext node) (cons node nodes))
         (recur (.GetNext node) nodes)))))
+
+(defn distance-to [pt1 pt2]
+  (sqrt (apply + (map square (map - pt1 pt2)))))
+
+
+(defn click-in-circ? [click-point node]
+  (let [[x y r] (get-draw-args node)]
+    (< (distance-to click-point [x y]) r)))
+
+(defn circle-at [pt]
+  (log (first (filter (partial click-in-circ? pt) (get-nodes world)))))
+
+(.addEventListener
+ canvas
+ "mousedown"
+ (fn [e]
+   (let [x (.-clientX e)
+         y (.-clientY e)
+         circle (circle-at [x y])])))
+
+(init)
+(js/requestAnimFrame update)
