@@ -6,6 +6,11 @@
 (defn log [message]
   (.log js/console message))
 
+(defn b2vec [x y]
+  (let [vec (-> js/Box2D (.-Common) (.-Math) (.-b2Vec2))]
+    (new vec x y)))
+
+
 (defn rand-color []
   (str "rgb(" (str/join "," (take 3 (repeatedly #(rand-int 255))))))
 
@@ -28,9 +33,9 @@
 (def ctx (.getContext canvas "2d"))
 
 (def SCALE 30)
-(def NUM-CIRCLES 20)
+(def NUM-CIRCLES 3)
 (def MAX-SIZE 3)
-(def MAX-INIT-VEL 5)
+(def MAX-INIT-VEL 0) 
 
 (def pair-list (atom #{}))
 (def selected-circles (atom #{}))
@@ -53,7 +58,7 @@
   (loop [node (first nodes) nodes (rest nodes)]
     (when node
       (if (paired? node)
-        (def color "red")
+        (def color "#aa6633")
         (def color "black"))
       (draw! color (get-draw-args node))
       (recur (first nodes) (rest nodes)))))
@@ -66,20 +71,6 @@
    (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
    (.fill ctx)
    (.stroke ctx))
-
-(comment
-
-  (defn draw-all-old! [args]
-    (loop [[x y r] (first args)
-           cdr (rest args)]
-      (set! (. ctx -fillStyle) "black")
-      (set! (. ctx -lineWidth) 1)
-      (set! (. ctx -strokeStyle) "#335588")
-      (.beginPath ctx)
-      (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
-      (.fill ctx)
-      (.stroke ctx)
-      (if-not (empty? cdr) (recur (first cdr) (rest cdr))))))
 
 (defn init []
   (let [dynamics      (.-Dynamics js/Box2D)
@@ -140,11 +131,34 @@
             (.CreateFixture (.CreateBody world body-def) fix-def)
             (recur (inc n)))))))
 
+
+(comment (defn update-forces! [pairs]
+           (doseq [pair pairs]
+             (update-force! pair)))
+
+         (defn update-force! [pair]
+           (let [[[x1 y1 r1] [x2 y2 r2]] (map get-draw-args pair)
+                 vec (-> js/Box2D (.-Common) (.-Math) (.-b2Vec2))]
+             ; (log (str x1 " " y1 " " r1 " " x2 " " y2 " " r2))
+             (doseq [body pair]
+               (log body)
+               (.ApplyForce body (new vec 100 100) (.GetWorldCenter body))))))
+
+(defn update-forces! []
+  (doseq [pair @pair-list]
+    (doseq [body pair]
+      (.ApplyForce body (b2vec 10 10) (.GetWorldCenter body)))))
+
+
+
 (defn update []
   (.Step world (/ 1 60) 10, 10)
   (.clearRect ctx 0 0 1000 1000)
   (draw-all! (get-nodes world))
-  (.ClearForces world)
+;  (update-forces!)
+ (.ClearForces world)
+  (force!)
+ 
   (js/requestAnimFrame update))
 
 (defn get-draw-args [node]
@@ -166,6 +180,14 @@
         (recur (.GetNext node) (cons node nodes))
         (recur (.GetNext node) nodes)))))
 
+(defn force! []
+   (loop [node (.GetBodyList world)]
+    (if node
+      (if (.GetFixtureList node)
+        (.ApplyForce node (b2vec 5 5) (.GetWorldCenter node))
+        (recur (.GetNext node)))
+      nil)))
+
 (defn distance-to [pt1 pt2]
   (sqrt (apply + (map square (map - pt1 pt2)))))
 
@@ -173,7 +195,7 @@
   (let [[x y r] (get-draw-args node)]
     (< (distance-to click-point [x y]) r)))
 
-(defn circle-at [pt]
+(defn get-circle-at [pt]
   (first (filter (partial click-in-circ? pt) (get-nodes world))))
 
 (.addEventListener
@@ -182,7 +204,7 @@
  (fn [e]
    (let [x (.-clientX e)
          y (.-clientY e)
-         circle (circle-at [x y])]
+         circle (get-circle-at [x y])]
      (when circle
        (when (< (count @selected-circles) 2)
          (swap! selected-circles conj circle))
