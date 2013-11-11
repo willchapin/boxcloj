@@ -28,9 +28,12 @@
 (def ctx (.getContext canvas "2d"))
 
 (def SCALE 30)
-(def NUM-CIRCLES 5)
-(def MAX-SIZE 4)
-(def MAX-INIT-VEL 3)
+(def NUM-CIRCLES 20)
+(def MAX-SIZE 3)
+(def MAX-INIT-VEL 5)
+
+(def pair-list (atom #{}))
+(def selected-circles (atom #{}))
 
 (defn scale [canvas dim]
   (defn height []
@@ -43,18 +46,40 @@
 (defn centered-rand-int [n]
   (- (rand-int n) (/ n 2)))
 
-(defn draw-all! [args]
-  (loop [[x y r] (first args)
-         cdr (rest args)]
-    (set! (. ctx -fillStyle) "black")
-    (set! (. ctx -lineWidth) 1)
-    (set! (. ctx -strokeStyle) "#335588")
-    (.beginPath ctx)
-    (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
-    (.fill ctx)
-    (.stroke ctx)
-    (if-not (empty? cdr) (recur (first cdr) (rest cdr)))))
+(defn paired? [node]
+  (some #(contains? % node) @pair-list))
 
+(defn draw-all! [nodes]
+  (loop [node (first nodes) nodes (rest nodes)]
+    (when node
+      (if (paired? node)
+        (def color "red")
+        (def color "black"))
+      (draw! color (get-draw-args node))
+      (recur (first nodes) (rest nodes)))))
+
+(defn draw! [color [x y r]]
+   (set! (. ctx -fillStyle) color)
+   (set! (. ctx -lineWidth) 1)
+   (set! (. ctx -strokeStyle) "#335588")
+   (.beginPath ctx)
+   (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
+   (.fill ctx)
+   (.stroke ctx))
+
+(comment
+
+  (defn draw-all-old! [args]
+    (loop [[x y r] (first args)
+           cdr (rest args)]
+      (set! (. ctx -fillStyle) "black")
+      (set! (. ctx -lineWidth) 1)
+      (set! (. ctx -strokeStyle) "#335588")
+      (.beginPath ctx)
+      (.arc ctx x y r 0 (* 2 (.-PI js/Math)) false)
+      (.fill ctx)
+      (.stroke ctx)
+      (if-not (empty? cdr) (recur (first cdr) (rest cdr))))))
 
 (defn init []
   (let [dynamics      (.-Dynamics js/Box2D)
@@ -118,7 +143,7 @@
 (defn update []
   (.Step world (/ 1 60) 10, 10)
   (.clearRect ctx 0 0 1000 1000)
-  (draw-all! (map get-draw-args (get-nodes world)))
+  (draw-all! (get-nodes world))
   (.ClearForces world)
   (js/requestAnimFrame update))
 
@@ -144,13 +169,12 @@
 (defn distance-to [pt1 pt2]
   (sqrt (apply + (map square (map - pt1 pt2)))))
 
-
 (defn click-in-circ? [click-point node]
   (let [[x y r] (get-draw-args node)]
     (< (distance-to click-point [x y]) r)))
 
 (defn circle-at [pt]
-  (log (first (filter (partial click-in-circ? pt) (get-nodes world)))))
+  (first (filter (partial click-in-circ? pt) (get-nodes world))))
 
 (.addEventListener
  canvas
@@ -158,7 +182,24 @@
  (fn [e]
    (let [x (.-clientX e)
          y (.-clientY e)
-         circle (circle-at [x y])])))
+         circle (circle-at [x y])]
+     (when circle
+       (when (< (count @selected-circles) 2)
+         (swap! selected-circles conj circle))
+       (when (= (count @selected-circles) 2)
+         (do (swap! pair-list conj @selected-circles)
+             (reset! selected-circles #{})))))
+  ; (log (str "pair-count: " (count @pair-list)))
+  ; (log (str "circs: " (count @selected-circles)))
+  ; (log @pair-list)
+   ))
+
+(defn print-pairs [pair-list]
+  (loop [pair (first pair-list) pairs (rest pair-list)]
+    (when pair
+      (log pair)
+      (recur (first pairs) (rest pairs)))))
+
 
 (init)
 (js/requestAnimFrame update)
