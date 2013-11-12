@@ -36,9 +36,9 @@
 
 (def SCALE 30)
 (def GRAVITY 0.1)
-(def NUM-CIRCLES 10)
-(def MAX-SIZE 5)
-(def MAX-INIT-VEL 3)
+(def NUM-CIRCLES 15)
+(def MAX-SIZE 3)
+(def MAX-INIT-VEL 10)
 
 (def RESTITUTION 0.8)
 (def FRICTION 0.5)
@@ -146,9 +146,8 @@
          y (.-pageY e)
          circle (get-circle-at [x y])]
      (when circle
-       (cond (< (count @selected-circles) 2) (swap! selected-circles conj circle)
-             (= (count @selected-circles) 2)
-             (do (swap! pair-list conj @selected-circles)
+       (if (empty? @selected-circles) (swap! selected-circles conj circle)
+           (do (swap! pair-list conj (conj @selected-circles circle))
                  (reset! selected-circles #{})))))))
 
 (defn update []
