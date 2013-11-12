@@ -64,12 +64,15 @@
 (defn paired? [node]
   (some #(contains? % node) @pair-list))
 
+(defn selected? [node]
+  (contains? @selected-circles node))
+
 (defn draw-all! [nodes]
   (loop [node (first nodes) nodes (rest nodes)]
     (when node
-      (if (paired? node)
-        (def color "#995522")
-        (def color "black"))
+      (if (paired? node) (def color "#995522")
+          (if (selected? node) (def color "#666")
+              (def color "black")))
       (draw! color (get-draw-args node))
       (recur (first nodes) (rest nodes)))))
 
@@ -101,8 +104,8 @@
 
 (defn update-force! [pair]
   (let [[[x1 y1 r1] [x2 y2 r2]] (map get-draw-args pair)
-        vecs [(b2vec (- x2 x1) (- y2 y1))
-              (b2vec (- x1 x2) (- y1 y2))]]
+        vecs [(b2vec (* GRAVITY (- x2 x1)) (* GRAVITY (- y2 y1)))
+              (b2vec (* GRAVITY (- x1 x2)) (* GRAVITY (- y1 y2)))]]
     (doseq [[body velocity] (map list pair vecs)]
       (.ApplyForce body velocity (.GetWorldCenter body)))))
 
