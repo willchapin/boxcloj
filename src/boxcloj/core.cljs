@@ -45,6 +45,7 @@
 
 (def pair-list (atom #{}))
 (def selected-circles (atom #{}))
+(def to-remove (atom #{}))
 
 ;; scalers and calculation helpers
 
@@ -146,9 +147,14 @@
          y (.-pageY e)
          circle (get-circle-at [x y])]
      (when circle
-       (if (empty? @selected-circles) (swap! selected-circles conj circle)
-           (do (swap! pair-list conj (conj @selected-circles circle))
-                 (reset! selected-circles #{})))))))
+       (log circle)
+       (when (< (count @selected-circles) 2) (swap! selected-circles conj circle))
+       (when (= (count @selected-circles) 2)
+         (do
+           (swap! pair-list conj @selected-circles)
+           (reset! selected-circles #{})))))))
+
+;;put circle into remove list!
 
 (defn update []
   (.Step world (/ 1 60) 10, 10)
@@ -182,7 +188,7 @@
     
     (let [contact-listener (.-b2ContactListener dynamics)
           listener (new contact-listener)]
-      (set! (.-BeginContact listener) (fn [c] (log c)))
+      (set! (.-BeginContact listener) (fn [c] ()))
       (.SetContactListener world listener))
 
     (set! (.-type body-def) (.-b2_staticBody b2body))
