@@ -43,8 +43,8 @@
 (def RESTITUTION 0.8)
 (def FRICTION 0.5)
 
-(def pair-list (atom #{}))
-(def selected-circles (atom #{}))
+(def pairs (atom #{}))
+(def selected (atom #{}))
 (def to-remove (atom #{}))
 
 ;; scalers and calculation helpers
@@ -63,17 +63,18 @@
 ;; drawing functions
 
 (defn paired? [node]
-  (some #(contains? % node) @pair-list))
+  (some #(contains? % node) @pairs))
 
 (defn selected? [node]
-  (contains? @selected-circles node))
+  (contains? @selected node))
 
 (defn draw-all! [nodes]
   (loop [node (first nodes) nodes (rest nodes)]
     (when node
-      (if (paired? node) (def color "#995522")
-          (if (selected? node) (def color "#666")
-              (def color "black")))
+      (if (contains? @to-remove node) (def color "#662222")
+          (if (paired? node) (def color "#995522")
+              (if (selected? node) (def color "#666")
+                  (def color "black"))))
       (draw! color (get-draw-args node))
       (recur (first nodes) (rest nodes)))))
 
@@ -146,23 +147,28 @@
    (let [x (.-pageX e)
          y (.-pageY e)
          circle (get-circle-at [x y])]
-     (when circle
-       (log circle)
-       (when (< (count @selected-circles) 2) (swap! selected-circles conj circle))
-       (when (= (count @selected-circles) 2)
-         (do
-           (swap! pair-list conj @selected-circles)
-           (reset! selected-circles #{})))))))
+     (if circle
+       (do
+         (if (contains? @selected circle) (reset! selected #{}) (swap! selected conj circle))
+         (when (paired? circle)
+           (swap! to-remove conj circle))
+         (when (= (count @selected) 2)
+           (if (contains? @pairs @selected)
+             (swap! pairs disj @selected)
+             (swap! pairs conj @selected))
+           (do
+             (reset! selected #{})
+             (reset! to-remove #{}))))
+       (do (reset! selected #{})
+           (reset! to-remove #{}))))))
 
-;;put circle into remove list!
-
-(defn update []
-  (.Step world (/ 1 60) 10, 10)
-  (.clearRect ctx 0 0 1000 1000)
-  (draw-all! (get-nodes world))
-  (.ClearForces world)
-  (process-pairs! @pair-list)
-  (js/requestAnimFrame update))
+   (defn update []
+     (.Step world (/ 1 60) 10, 10)
+     (.clearRect ctx 0 0 1000 1000)
+     (draw-all! (get-nodes world))
+     (.ClearForces world)
+     (process-pairs! @pairs)
+     (js/requestAnimFrame update))
 
 
 (defn init []
