@@ -1,7 +1,7 @@
 (ns boxcloj.core
   (:require [clojure.string :as str]
-            [boxcloj.maths :refer [sqrt pow square]])
-  (:require-macros [boxcloj.macros :refer [add]]))
+            [boxcloj.maths :refer [sqrt pow square]]))
+
 
 ;; set utility functions
 
@@ -23,29 +23,46 @@
        (.-msAnimationFrame js/window)))
 
 (defn setAnimFrame []
-  (set!
-   (.-requestAnimFrame js/window)
-   (getAnimFrameType)))
+  (set! (.-requestAnimFrame js/window) (getAnimFrameType)))
 
 (setAnimFrame)
 
+(defn types-match? [contact]
+  (= (.GetType (.GetFixtureA contact))
+     (.GetType (.GetFixtureB contact))))
+
+(defn play [shape]
+  (let [r (.-m_radius shape)]
+    (.play
+     (new js/Audio
+          (nth notes (.floor js/Math (* r 2)))))))
+
 ;; set global variables and constants
+
+(def notes ["sounds/E5_wet.wav"            
+            "sounds/C5_wet.wav"                     
+            "sounds/A4.wav"
+            "sounds/A4.wav"            
+            "sounds/G4.wav"
+            "sounds/F4_wet.wav"
+            "sounds/D4.wav"                                 
+            ])
+
 
 (def canvas (.getElementById js/document "c"))
 (def ctx (.getContext canvas "2d"))
 
 (def SCALE 30)
 (def GRAVITY 0.1)
-(def NUM-CIRCLES 15)
+(def NUM-CIRCLES 10)
 (def MAX-SIZE 3)
 (def MAX-INIT-VEL 10)
 
-(def RESTITUTION 0.8)
-(def FRICTION 0.5)
+(def RESTITUTION 0.9)
+(def FRICTION 0.2)
 
 (def pairs (atom #{}))
 (def selected (atom #{}))
-(def to-remove (atom #{}))
 
 ;; scalers and calculation helpers
 
@@ -71,10 +88,9 @@
 (defn draw-all! [nodes]
   (loop [node (first nodes) nodes (rest nodes)]
     (when node
-      (if (contains? @to-remove node) (def color "#662222")
-          (if (paired? node) (def color "#995522")
-              (if (selected? node) (def color "#666")
-                  (def color "black"))))
+      (if (selected? node) (def color "#333")
+          (if (paired? node) (def color "#358")
+              (def color "black")))
       (draw! color (get-draw-args node))
       (recur (first nodes) (rest nodes)))))
 
@@ -147,28 +163,21 @@
    (let [x (.-pageX e)
          y (.-pageY e)
          circle (get-circle-at [x y])]
-     (if circle
-       (do
-         (if (contains? @selected circle) (reset! selected #{}) (swap! selected conj circle))
-         (when (paired? circle)
-           (swap! to-remove conj circle))
-         (when (= (count @selected) 2)
-           (if (contains? @pairs @selected)
-             (swap! pairs disj @selected)
-             (swap! pairs conj @selected))
-           (do
-             (reset! selected #{})
-             (reset! to-remove #{}))))
-       (do (reset! selected #{})
-           (reset! to-remove #{}))))))
+     (when circle
+       (if (contains? @selected circle) (reset! selected #{}) (swap! selected conj circle))
+       (when (= (count @selected) 2)
+         (if (contains? @pairs @selected)
+           (swap! pairs disj @selected)
+           (swap! pairs conj @selected))
+         (reset! selected #{}))))))
 
-   (defn update []
-     (.Step world (/ 1 60) 10, 10)
-     (.clearRect ctx 0 0 1000 1000)
-     (draw-all! (get-nodes world))
-     (.ClearForces world)
-     (process-pairs! @pairs)
-     (js/requestAnimFrame update))
+(defn update []
+  (.Step world (/ 1 60) 10, 10)
+  (.clearRect ctx 0 0 1000 1000)
+  (draw-all! (get-nodes world))
+  (.ClearForces world)
+  (process-pairs! @pairs)
+  (js/requestAnimFrame update))
 
 
 (defn init []
@@ -194,12 +203,16 @@
     
     (let [contact-listener (.-b2ContactListener dynamics)
           listener (new contact-listener)]
-      (set! (.-BeginContact listener) (fn [c] ()))
+      (set! (.-BeginContact listener)
+            (fn [c]
+              (when (types-match? c)
+                (play (.GetShape (.GetFixtureA c)))
+                (play (.GetShape (.GetFixtureB c))))))
       (.SetContactListener world listener))
 
     (set! (.-type body-def) (.-b2_staticBody b2body))
     (set! (.-shape fix-def) (new b2poly))
-
+    
     (let [wall-map {:x      [(/ SCALE 2) (+ SCALE 1) (/ SCALE 2) -1]
                     :y      [(+ SCALE 1) (/ SCALE 2) -1 (/ SCALE 2)]
                     :width  [(/ SCALE 2) 1 (/ SCALE 2) 1]
@@ -228,6 +241,7 @@
                        (centered-rand-int MAX-INIT-VEL)))
             (.CreateFixture (.CreateBody world body-def) fix-def)
             (recur (inc n)))))))
+
 
 (init)
 (js/requestAnimFrame update)
