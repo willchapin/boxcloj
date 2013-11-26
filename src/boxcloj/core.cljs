@@ -42,10 +42,10 @@
 (def notes ["sounds/E5_wet.wav"            
             "sounds/C5_wet.wav"                     
             "sounds/A4.wav"
-            "sounds/A4.wav"            
             "sounds/G4.wav"
             "sounds/F4_wet.wav"
-            "sounds/D4.wav"                                 
+            "sounds/D4.wav"
+            "sounds/Bb3.wav"
             ])
 
 
