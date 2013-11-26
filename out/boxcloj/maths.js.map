@@ -1,0 +1,6 @@
+{"version":3,
+ "file":"/Users/will/clojurescript/boxcloj/out/boxcloj/maths.js",
+ "sources":["maths.cljs"],
+ "lineCount":9,
+ "mappings":";;;AAGCA,qBAAUC;AACVC,oBAASD;AACTE,wCAAcC,WAAGA,IAAAA",
+ "names":["sqrt", "Math", "pow", "square", "x"]}
