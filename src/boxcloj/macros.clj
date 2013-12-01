@@ -1,7 +1,7 @@
 (ns boxcloj.macros)
 
-(defmacro add [a b]
-  (+ 1 2))
-
+(defmacro my_set! [obj & args]
+  (doseq [[attr val] (partition 2 args)]
+    `(set! (~attr ~obj) ~value)))
 
 

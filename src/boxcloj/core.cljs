@@ -39,11 +39,11 @@
 
 ;; set global variables and constants
 
-(def notes ["sounds/E5_wet.wav"            
-            "sounds/C5_wet.wav"                     
+(def notes ["sounds/E5.wav"            
+            "sounds/C5.wav"                     
             "sounds/A4.wav"
             "sounds/G4.wav"
-            "sounds/F4_wet.wav"
+            "sounds/F4.wav"
             "sounds/D4.wav"
             "sounds/Bb3.wav"
             ])
@@ -54,7 +54,7 @@
 
 (def SCALE 30)
 (def GRAVITY 0.1)
-(def NUM-CIRCLES 10)
+(def NUM-CIRCLES 5)
 (def MAX-SIZE 3)
 (def MAX-INIT-VEL 10)
 
