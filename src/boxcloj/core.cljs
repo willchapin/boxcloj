@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [boxcloj.maths :refer [sqrt pow square]]))
 
-
 ;; set utility functions
 
 (defn log [message]
@@ -47,7 +46,6 @@
             "sounds/D4.wav"
             "sounds/Bb3.wav"
             ])
-
 
 (def canvas (.getElementById js/document "c"))
 (def ctx (.getContext canvas "2d"))
@@ -149,12 +147,12 @@
 (defn distance-to [pt1 pt2]
   (sqrt (apply + (map square (map - pt1 pt2)))))
 
-(defn click-in-circ? [click-point node]
+(defn click-in-circle? [click-point node]
   (let [[x y r] (get-draw-args node)]
     (< (distance-to click-point [x y]) r)))
 
 (defn get-circle-at [pt]
-  (first (filter (partial click-in-circ? pt) (get-nodes world))))
+  (first (filter (partial click-in-circle? pt) (get-nodes world))))
 
 (.addEventListener
  canvas
@@ -171,48 +169,40 @@
            (swap! pairs conj @selected))
          (reset! selected #{}))))))
 
-(defn update []
-  (.Step world (/ 1 60) 10, 10)
-  (.clearRect ctx 0 0 1000 1000)
-  (draw-all! (get-nodes world))
-  (.ClearForces world)
-  (process-pairs! @pairs)
-  (js/requestAnimFrame update))
+(defn add-circles [fix-def b2circle position body-def b2vec b2body num-circles]
+  (set! (.-type body-def) (.-b2_dynamicBody b2body))
+   (loop [n 0]
+    (if (< n num-circles)
+      (do
+        (set! (.-shape fix-def) (new b2circle (+ (* MAX-SIZE (rand)) 0.2)))
+        (set! (.-x position) (rand-int SCALE))
+        (set! (.-y position) (rand-int SCALE))
+        (set! (.-linearVelocity body-def)
+              (b2vec (centered-rand-int MAX-INIT-VEL)
+                     (centered-rand-int MAX-INIT-VEL)))
+        (.CreateFixture (.CreateBody world body-def) fix-def)
+        (recur (inc n))))))
 
+(defn set-fixture-attributes [fix-def density friction restitution]
+  (set! (.-density fix-def) density)
+  (set! (.-friction fix-def) friction)
+  (set! (.-restitution fix-def) restitution))
 
-(defn init []
-  (let [dynamics      (.-Dynamics js/Box2D)
-        collision     (.-Collision js/Box2D)
-        shapes        (.-Shapes collision)
-        b2body-def    (.-b2BodyDef dynamics)
-        b2body        (.-b2Body dynamics)
-        b2fixture-def (.-b2FixtureDef dynamics)
-        b2fixture     (.-b2Fixture dynamics)
-        b2world       (.-b2World dynamics)
-        b2circle      (.-b2CircleShape shapes)
-        b2poly        (.-b2PolygonShape shapes)
-        b2contact-listner (.-b2ContactListener dynamics)
-        fix-def       (new b2fixture-def)
-        body-def      (new b2body-def)
-        position      (.-position body-def)]
-    
-    (def world (new b2world (b2vec 0 0) true))
-    (set! (.-density fix-def) 1)
-    (set! (.-friction fix-def) FRICTION)
-    (set! (.-restitution fix-def) RESTITUTION)
-    
-    (let [contact-listener (.-b2ContactListener dynamics)
-          listener (new contact-listener)]
-      (set! (.-BeginContact listener)
-            (fn [c]
-              (when (types-match? c)
-                (play (.GetShape (.GetFixtureA c)))
-                (play (.GetShape (.GetFixtureB c))))))
-      (.SetContactListener world listener))
+(defn set-contact-listener [contact-listener]
+  (let [listener (new contact-listener)]
+    (set! (.-BeginContact listener)
+          (fn [c]
+            (when (types-match? c)
+              (play-sounds c))))
+    (.SetContactListener world listener)))
 
+(defn play-sounds [c]
+  (play (.GetShape (.GetFixtureA c)))
+  (play (.GetShape (.GetFixtureB c))))
+
+(defn add-walls [fix-def b2body position body-def b2poly]
     (set! (.-type body-def) (.-b2_staticBody b2body))
     (set! (.-shape fix-def) (new b2poly))
-    
     (let [wall-map {:x      [(/ SCALE 2) (+ SCALE 1) (/ SCALE 2) -1]
                     :y      [(+ SCALE 1) (/ SCALE 2) -1 (/ SCALE 2)]
                     :width  [(/ SCALE 2) 1 (/ SCALE 2) 1]
@@ -226,22 +216,39 @@
                      (nth (wall-map :width) n)
                      (nth (wall-map :height) n))
           (.CreateFixture (.CreateBody world body-def) fix-def)
-          (recur (inc n)))))
-     
-      (set! (.-type body-def) (.-b2_dynamicBody b2body))
-      
-      (loop [n 0]
-        (if (< n NUM-CIRCLES)
-          (do
-            (set! (.-shape fix-def) (new b2circle (+ (* MAX-SIZE (rand)) 0.2)))
-            (set! (.-x position) (rand-int SCALE))
-            (set! (.-y position) (rand-int SCALE))
-            (set! (.-linearVelocity body-def)
-                  (b2vec (centered-rand-int MAX-INIT-VEL)
-                       (centered-rand-int MAX-INIT-VEL)))
-            (.CreateFixture (.CreateBody world body-def) fix-def)
-            (recur (inc n)))))))
+          (recur (inc n))))))
 
+(defn init []
+  (let [dynamics      (.-Dynamics js/Box2D)
+        collision     (.-Collision js/Box2D)
+        shapes        (.-Shapes collision)
+        b2body-def    (.-b2BodyDef dynamics)
+        b2body        (.-b2Body dynamics)
+        b2fixture-def (.-b2FixtureDef dynamics)
+        b2fixture     (.-b2Fixture dynamics)
+        b2world       (.-b2World dynamics)
+        b2circle      (.-b2CircleShape shapes)
+        b2poly        (.-b2PolygonShape shapes)
+        b2contact-listener (.-b2ContactListener dynamics)
+        fix-def       (new b2fixture-def)
+        body-def      (new b2body-def)
+        position      (.-position body-def)]
+    
+    (def world (new b2world (b2vec 0 0) true))
+    
+    (set-fixture-attributes fix-def 1 FRICTION RESTITUTION)
+    (set-contact-listener b2contact-listener)
+ 
+    (add-walls fix-def b2body position body-def b2poly)
+    (add-circles fix-def b2circle position body-def b2vec b2body NUM-CIRCLES)))
+
+(defn update []
+  (.Step world (/ 1 60) 10, 10)
+  (.clearRect ctx 0 0 1000 1000)
+  (draw-all! (get-nodes world))
+  (.ClearForces world)
+  (process-pairs! @pairs)
+  (js/requestAnimFrame update))
 
 (init)
 (js/requestAnimFrame update)
